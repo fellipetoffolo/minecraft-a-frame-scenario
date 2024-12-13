@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terreno com Árvores</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.min.js"></script>
+
+    <script>
+      // Componente de árvore
+      AFRAME.registerComponent('tree', {
+        schema: {
+          trunkColor: {type: 'color', default: '#FFFFFF'},
+          trunkHeight: {type: 'number', default: 6},
+          trunkWidth: {type: 'number', default: 1},
+          leavesColor: {type: 'color', default: '#228B22'},
+          leavesHeight: {type: 'number', default: 2},
+          leavesWidth: {type: 'number', default: 3}
+        },
+        init: function () {
+          const trunk = document.createElement('a-box');
+          trunk.setAttribute('color', this.data.trunkColor);
+          trunk.setAttribute('height', this.data.trunkHeight);
+          trunk.setAttribute('width', this.data.trunkWidth);
+          trunk.setAttribute('depth', this.data.trunkWidth);
+          trunk.setAttribute('position', `0 ${this.data.trunkHeight / 2} 0`);
+          trunk.setAttribute('material', 'src: #textura-tronco; repeat: 1 1;');
+
+          const leaves = document.createElement('a-box');
+          leaves.setAttribute('color', this.data.leavesColor);
+          leaves.setAttribute('height', this.data.leavesHeight);
+          leaves.setAttribute('width', this.data.leavesWidth);
+          leaves.setAttribute('depth', this.data.leavesWidth);
+          leaves.setAttribute('position', `0 ${(this.data.leavesHeight + this.data.trunkHeight) / 2} 0`);
+          trunk.setAttribute('material', 'src: #textura-folha; repeat: 1 1;');
+
+          this.el.appendChild(trunk);
+          this.el.appendChild(leaves);
+        }
+      });
+    </script>
+
+
+    <script>
+      // Registro do componente "teto"
+      AFRAME.registerComponent('teto', {
+        schema: {
+          roofColor: { type: 'color', default: '#FFFFFF' }, // Cor da "escada"
+          stepHeight: { type: 'number', default: 0.5 },     // Altura de cada degrau
+          stepWidth: { type: 'number', default: 1 },       // Largura de cada degrau
+          stepDepth: { type: 'number', default: 0.5 }      // Profundidade de cada degrau
+        },
+        init: function () {
+          const data = this.data;
+
+          // Primeiro bloco (topo)
+          const top = document.createElement('a-box');
+          top.setAttribute('color', data.roofColor);
+          top.setAttribute('height', data.stepHeight);
+          top.setAttribute('width', data.stepWidth);
+          top.setAttribute('depth', data.stepDepth);
+          top.setAttribute('position', `0 ${data.stepHeight / 2} 0`);
+          top.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+
+          // Segundo bloco (base)
+          const down = document.createElement('a-box');
+          down.setAttribute('color', data.roofColor);
+          down.setAttribute('height', data.stepHeight);
+          down.setAttribute('width', data.stepWidth);
+          down.setAttribute('depth', data.stepDepth);
+          down.setAttribute('position', `0 ${data.stepHeight / 2 - 0.5} 0`);
+          down.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+
+          // Terceiro bloco (frontal)
+          const front = document.createElement('a-box');
+          front.setAttribute('color', data.roofColor);
+          front.setAttribute('height', data.stepHeight);
+          front.setAttribute('width', data.stepWidth);
+          front.setAttribute('depth', data.stepDepth);
+          front.setAttribute('position', `0 ${data.stepHeight / 2 - 0.5}  0.5`);
+          front.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+
+          // Adicionar os blocos ao componente
+          this.el.appendChild(front);
+          this.el.appendChild(down);
+          this.el.appendChild(top);
+        }
+      });
+    </script>
+
+
+
+<script>
+  //Componente casa
+  AFRAME.registerComponent('house', {
+      schema: {
+        roofColor: { type: 'color', default: '#888888' }, // Cor dos blocos
+        stepHeight: { type: 'number', default: 1 },     // Altura dos blocos
+        stepWidth: { type: 'number', default: 1 },       // Largura dos blocos
+        stepDepth: { type: 'number', default: 1 }        // Profundidade dos blocos
+      },
+      init: function () {
+        const data = this.data;
+        const areaCasa = 7;  
+        const alturaCasa = Math.floor((areaCasa + 1)/ 2);
+        let k = 0;
+
+        // Gerar 2 primeiras camadas da casa
+        for(k = 0; k < 2; k++){
+          for(let j = 0; j < areaCasa; j++){
+            for (let i = 0; i < areaCasa; i++) {
+                if( (i === 0 || i === areaCasa - 1 || j === 0 || j === areaCasa - 1) && (i !== alturaCasa - 1) ){
+                    const bloco = document.createElement('a-box');
+                    bloco.setAttribute('color', data.roofColor);
+                    bloco.setAttribute('height', data.stepHeight);
+                    bloco.setAttribute('width', data.stepWidth ); 
+                    bloco.setAttribute('depth', data.stepDepth ); 
+                    bloco.setAttribute('position', `${i} ${k-1.5} ${j}`);
+                    if(k === 1){
+                      bloco.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+                    } else{
+                      bloco.setAttribute('material', 'src: #textura-pedra; repeat: 1 1;');
+                    }
+                    this.el.appendChild(bloco);
+                }
+              }
+            }
+          }
+
+          //Gerar terceira camada da casa
+          for(let j = 0; j < areaCasa; j++){
+            for (let i = 0; i < areaCasa; i++) {
+              if( (i === 0 || i === areaCasa - 1 || j === 0 || j === areaCasa - 1)){
+                    const bloco = document.createElement('a-box');
+                    bloco.setAttribute('color', data.roofColor);
+                    bloco.setAttribute('height', data.stepHeight);
+                    bloco.setAttribute('width', data.stepWidth ); 
+                    bloco.setAttribute('depth', data.stepDepth ); 
+                    bloco.setAttribute('position', `${i} ${k-1.5} ${j}`);
+                    bloco.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+                    this.el.appendChild(bloco);
+              }
+            }
+          }
+
+
+          
+          
+          //Gerar teto da casa
+          for(let h = 0; h < alturaCasa-1; h++){
+            for(let j = 0; j < areaCasa; j++){
+              for (let i = 0+h; i < areaCasa-h; i++) {
+                      const bloco = document.createElement('a-box');
+                      bloco.setAttribute('color', data.roofColor);
+                      bloco.setAttribute('height', data.stepHeight);
+                      bloco.setAttribute('width', data.stepWidth ); 
+                      bloco.setAttribute('depth', data.stepDepth ); 
+                      bloco.setAttribute('position', `${i} ${k-0.5+h} ${j}`);
+                      bloco.setAttribute('material', 'src: #textura-pedra; repeat: 1 1;');
+                      this.el.appendChild(bloco);
+              }
+            }
+          }
+
+          //Gerar última linha vertical da casa
+          for (let i = -1; i < areaCasa+1; i++) {
+                      const bloco = document.createElement('a-box');
+                      bloco.setAttribute('color', data.roofColor);
+                      bloco.setAttribute('height', data.stepHeight);
+                      bloco.setAttribute('width', data.stepWidth ); // Diminui a largura para parecer inclinado
+                      bloco.setAttribute('depth', data.stepDepth ); // Diminui a profundidade para parecer inclinado
+                      bloco.setAttribute('position', `${Math.ceil(areaCasa/2) - 1} ${k-0.5+alturaCasa-1} ${i}`);
+                      bloco.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+                      this.el.appendChild(bloco);
+              }
+
+
+          //Adiciona a escadinha no telhado
+          for(let h = 0; h < alturaCasa; h++){  
+            for(let j = -1; j < areaCasa+1; j++){
+              for (let i = -1+h; i < areaCasa+1-h; i++) {
+                  if(  i === -1 + h || i === areaCasa - h){
+                        const entity = document.createElement('a-entity');
+                        entity.setAttribute('teto', {
+                          roofColor: data.roofColor,
+                          stepHeight: 0.5,
+                          stepWidth: 1,
+                          stepDepth: 0.5
+                        });
+                        
+                        entity.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+                        if(  i === -1 + h ){
+                          entity.setAttribute('rotation', '0 -90 0');
+                          entity.setAttribute('position', `${i + 0.25} ${k-0.5+h} ${j}`);
+                        } else{
+                          entity.setAttribute('rotation', '0 90 0');
+                          entity.setAttribute('position', `${i - 0.25} ${k-0.5+h} ${j}`);
+                        }
+                        this.el.appendChild(entity);
+                  }
+              }
+            }
+          }
+
+          //Adiciona escadinha invertida nas bordas do telhado
+          for(let h = 0; h < alturaCasa; h++){
+            for(let j = -1; j < areaCasa+1; j++){
+              for (let i = h; i < areaCasa-h+1; i++) {
+                if(  (i ===  h && j === -1) || (i ===  h && j === areaCasa ) || (i === areaCasa - h - 1 && j === areaCasa ) || (i === areaCasa - h - 1 && j === -1)){
+                  const entity = document.createElement('a-entity');
+                        entity.setAttribute('teto', {
+                          roofColor: data.roofColor,
+                          stepHeight: 0.5,
+                          stepWidth: 1,
+                          stepDepth: 0.5
+                        });
+                        entity.setAttribute('material', 'src: #textura-tabua; repeat: 1 1;');
+                        if(((i === h && j === -1) || (i === h && j === areaCasa)) && h < alturaCasa - 1){
+                          entity.setAttribute('rotation', '180 -90 0');
+                          entity.setAttribute('position', `${i - 0.25} ${k-0.5+h} ${j}`);
+                        } else{
+                          if(h < Math.floor((areaCasa + 1)/ 2) - 1){
+                            entity.setAttribute('rotation', '180 90 0');
+                            entity.setAttribute('position', `${i + 0.25} ${k-0.5+h} ${j}`);
+                          }else {
+                            entity.setAttribute('rotation', '180 90 0');
+                            bloco.setAttribute('position', `${i + 0.25} ${k-0.5+h} ${j}`);
+                            this.el.appendChild(bloco);
+                          }
+
+                        }
+                        this.el.appendChild(entity);    
+                }
+              }
+            }
+          }
+
+      }
+    });
+  </script>
+
+
+    
+
+
+  </head>
+  <body>
+    <a-scene>
+      <a-assets>
+        <img id="textura-terreno" src="textura-terreno.jpeg" />
+        <img id="textura-folha" src="leaves-texture.png" />
+        <img id="textura-tabua" src="wooden-texture.jpeg" />
+        <img id="textura-pedra" src="cobblestone-texture.png" />
+        <img id="textura-tronco" src="log-texture.jpg" />
+      </a-assets>
+
+      <a-entity id="camera" camera look-controls wasd-controls position="0 10 20"></a-entity>
+      <a-light type="directional" position="10 20 10" intensity="2"></a-light>
+      <a-light type="ambient" intensity="0.5"></a-light>
+
+      <script>
+        const scene = document.querySelector('a-scene');
+        const simplex = new SimplexNoise();
+        const tamanhoTerreno = 40;
+        const alturaMaxima = 19;
+        const alturaBase = -3;
+        const densidadePlanicies = 300;
+        const areaTerreno = tamanhoTerreno * tamanhoTerreno;
+        const numPlanicies = Math.max(1, Math.floor(areaTerreno / densidadePlanicies));
+        const tamanhoMinPlanicie = 14;
+        const tamanhoMaxPlanicie = 18;
+      
+        // Matriz para armazenar as alturas do terreno
+        const alturasTerreno = Array.from({ length: tamanhoTerreno }, () => Array(tamanhoTerreno).fill(alturaBase));
+      
+        // Geração de planícies
+        const planicies = [];
+        for (let i = 0; i < numPlanicies; i++) {
+          const centroX = Math.floor(Math.random() * tamanhoTerreno);
+          const centroZ = Math.floor(Math.random() * tamanhoTerreno);
+          const tamanho = Math.floor(Math.random() * (tamanhoMaxPlanicie - tamanhoMinPlanicie) + tamanhoMinPlanicie);
+          const truncada = Math.random() < 0.5;
+          const alturaTruncada = truncada ? Math.random() * (alturaMaxima / 2) + alturaMaxima / 2 : alturaMaxima;
+          planicies.push({ x: centroX, z: centroZ, tamanho, alturaTruncada });
+        }
+      
+        function calcularAlturaSuave(x, z) {
+          let altura = alturaBase;
+          for (const planicie of planicies) {
+            const distancia = Math.sqrt((x - planicie.x) ** 2 + (z - planicie.z) ** 2);
+            if (distancia < planicie.tamanho) {
+              const fatorSuavidade = 1 - distancia / planicie.tamanho;
+              altura = Math.max(altura, fatorSuavidade * planicie.alturaTruncada);
+            }
+          }
+          if (altura === alturaBase) {
+            const escala = 0.1;
+            altura = simplex.noise2D(x * escala, z * escala) * alturaMaxima;
+          }
+          return Math.round(altura);
+        }
+      
+        // Gerar terreno e ajustar posição dos blocos
+        function gerarTerreno() {
+          for (let x = 0; x < tamanhoTerreno; x++) {
+            for (let z = 0; z < tamanhoTerreno; z++) {
+              const altura = calcularAlturaSuave(x, z);
+              alturasTerreno[x][z] = altura; // Salva altura para uso posterior
+      
+              const bloco = document.createElement('a-box');
+              bloco.setAttribute('position', `${x} ${altura + 0.5} ${z}`);
+              bloco.setAttribute('width', 1);
+              bloco.setAttribute('height', 1);
+              bloco.setAttribute('depth', 1);
+              bloco.setAttribute('color', '#228B22');
+              bloco.setAttribute('material', 'src: #textura-terreno; repeat: 1 1;');
+              scene.appendChild(bloco);
+      
+              for (let y = altura - 1; y >= alturaBase; y--) {
+                const blocoInferior = document.createElement('a-box');
+                blocoInferior.setAttribute('position', `${x} ${y + 0.5} ${z}`);
+                blocoInferior.setAttribute('width', 1);
+                blocoInferior.setAttribute('height', 1);
+                blocoInferior.setAttribute('depth', 1);
+                blocoInferior.setAttribute('color', '#228B22');
+                scene.appendChild(blocoInferior);
+              }
+            }
+          }
+        }
+
+                // Gerar árvores alinhadas com distância mínima entre elas
+                function gerarArvores(numArvores) {
+                const posicoesArvores = []; // Lista para armazenar as posições ocupadas pelas árvores
+                const distanciaMinima = 3; // Distância mínima entre árvores
+            
+                for (let i = 0; i < numArvores; i++) {
+                  let x, z, altura, valido;
+            
+                  // Tentar gerar posição válida para a árvore
+                  do {
+                    x = Math.floor(Math.random() * tamanhoTerreno);
+                    z = Math.floor(Math.random() * tamanhoTerreno);
+                    altura = alturasTerreno[x][z]; // Altura do topo do bloco
+                    valido = true;
+            
+                    // Verificar se a nova posição está suficientemente longe de outras árvores
+                    for (const pos of posicoesArvores) {
+                      const distancia = Math.sqrt((x - pos.x) ** 2 + (z - pos.z) ** 2);
+                      if (distancia < distanciaMinima) {
+                        valido = false;
+                        break;
+                      }
+                    }
+                  } while (!valido); // Continuar tentando até encontrar uma posição válida
+      
+            // Adicionar a posição atual à lista de posições ocupadas
+            posicoesArvores.push({ x, z });
+      
+            // Criar e posicionar a árvore
+            const arvore = document.createElement('a-entity');
+            arvore.setAttribute('tree', 'trunkColor: #8B4513; leavesColor: #228B22');
+            arvore.setAttribute('position', `${x} ${altura + 1} ${z}`); // Topo alinhado
+            scene.appendChild(arvore);
+          }
+        }
+      
+        // Gerar casa no centro de uma planície
+        function gerarCasa() {
+          if (planicies.length === 0) return; // Garantir que existe ao menos uma planície
+      
+          // Escolhe uma planície aleatoriamente
+          const planicieEscolhida = planicies[Math.floor(Math.random() * planicies.length)];
+          const { x: centroX, z: centroZ, tamanho } = planicieEscolhida;
+      
+          // Determinar a altura média do centro da planície
+          let somaAlturas = 0;
+          let count = 0;
+          for (let x = centroX - Math.floor(tamanho / 2); x <= centroX + Math.floor(tamanho / 2); x++) {
+            for (let z = centroZ - Math.floor(tamanho / 2); z <= centroZ + Math.floor(tamanho / 2); z++) {
+              if (x >= 0 && x < tamanhoTerreno && z >= 0 && z < tamanhoTerreno) {
+                somaAlturas += alturasTerreno[x][z];
+                count++;
+              }
+            }
+          }
+          const alturaMedia = count > 0 ? Math.round(somaAlturas / count) : alturaBase;
+      
+          // Criar a casa na posição calculada
+          const casa = document.createElement('a-entity');
+          casa.setAttribute('house', ''); // Presume que existe um componente `house` registrado
+          casa.setAttribute('position', `${centroX} ${alturaMedia + 2} ${centroZ}`);
+          scene.appendChild(casa);
+        }
+      
+        // Movimentação da câmera para cima e para baixo
+        let camera = document.querySelector('#camera');
+        let cameraY = 10;
+      
+        function moverCamera(deltaY) {
+          cameraY += deltaY;
+          const cameraPosition = camera.getAttribute('position');
+          camera.setAttribute('position', `${cameraPosition.x} ${cameraY} ${cameraPosition.z}`);
+        }
+      
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'e' || event.key === 'E') {
+            moverCamera(1); // Move para cima
+          } else if (event.key === 'q' || event.key === 'Q') {
+            moverCamera(-1); // Move para baixo
+          }
+        });
+      
+        // Inicializa terreno e árvores
+        gerarTerreno();
+        gerarArvores(Math.floor(tamanhoTerreno / 2)); // Define número de árvores
+        gerarCasa(); // Gera casa após o terreno
+      </script>
+      
+      
+      
+
+      <a-sky color="#8EBAA7"></a-sky>
+    </a-scene>
+  </body>
+</html>
